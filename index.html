@@ -10,8 +10,16 @@
   <main class="app-shell">
     <section class="todo-card" aria-labelledby="page-title">
       <header class="app-header">
-        <p class="eyebrow">MY TASKS</p>
-        <h1 id="page-title">待辦清單</h1>
+        <div class="title-row">
+          <div>
+            <p class="eyebrow">MY TASKS</p>
+            <h1 id="page-title">待辦清單</h1>
+          </div>
+          <button id="theme-toggle" class="theme-toggle" type="button" aria-label="切換為深色模式">
+            <span class="theme-icon" aria-hidden="true">🌙</span>
+            <span class="theme-label">深色模式</span>
+          </button>
+        </div>
         <p class="subtitle">把今天要完成的事情，一件一件做好。</p>
       </header>
 
@@ -28,7 +36,13 @@
         <button type="submit" class="add-button">新增</button>
       </form>
 
-      <p id="empty-state" class="empty-state">還沒有任何待辦事項，新增一個吧!</p>
+      <nav class="filter-tabs" aria-label="待辦篩選">
+        <button class="filter-button active" type="button" data-filter="all" aria-pressed="true">全部</button>
+        <button class="filter-button" type="button" data-filter="active" aria-pressed="false">未完成</button>
+        <button class="filter-button" type="button" data-filter="completed" aria-pressed="false">已完成</button>
+      </nav>
+
+      <p id="empty-state" class="empty-state" hidden>還沒有任何待辦事項，新增一個吧!</p>
       <ul id="todo-list" class="todo-list" aria-live="polite"></ul>
 
       <footer class="todo-footer">
