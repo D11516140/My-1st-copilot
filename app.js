@@ -5,7 +5,9 @@ const todoInput = document.getElementById('todo-input');
 const todoList = document.getElementById('todo-list');
 const emptyState = document.getElementById('empty-state');
 const todoCount = document.getElementById('todo-count');
+const filterButtons = document.querySelectorAll('.filter-button');
 let todos = loadTodos();
+let currentFilter = 'all';
 
 // 讀取儲存的待辦資料，資料格式不正確時回傳空陣列。
 function loadTodos() {
@@ -40,34 +42,64 @@ function getUnfinishedCount() {
   return todos.filter((todo) => !todo.completed).length;
 }
 
-// 將文字中的特殊字元轉義，避免插入 HTML 時造成 XSS。
-function escapeHtml(text) {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+// 依照目前的篩選條件取得要顯示的待辦事項。
+function getVisibleTodos() {
+  if (currentFilter === 'active') {
+    return todos.filter((todo) => !todo.completed);
+  }
+
+  if (currentFilter === 'completed') {
+    return todos.filter((todo) => todo.completed);
+  }
+
+  return todos;
+}
+
+// 依照目前的篩選條件取得空清單提示文字。
+function getEmptyMessage() {
+  if (todos.length === 0) {
+    return '還沒有任何待辦事項，新增一個吧!';
+  }
+
+  if (currentFilter === 'active') {
+    return '目前沒有未完成的事項。';
+  }
+
+  return '目前沒有已完成的事項。項目可能只是被目前的篩選條件隱藏。';
 }
 
 // 重新渲染清單、空狀態與底部計數。
 function renderTodos() {
-  emptyState.hidden = todos.length > 0;
-  todoList.innerHTML = todos
-    .map(
-      (todo) => `
-        <li class="todo-item${todo.completed ? ' completed' : ''}" data-id="${todo.id}">
-          <input
-            type="checkbox"
-            ${todo.completed ? 'checked' : ''}
-            aria-label="標記為完成"
-          >
-          <span class="todo-text">${escapeHtml(todo.text)}</span>
-          <button type="button" class="delete-button" aria-label="刪除待辦">&times;</button>
-        </li>
-      `
-    )
-    .join('');
+  const visibleTodos = getVisibleTodos();
+
+  todoList.replaceChildren();
+
+  visibleTodos.forEach((todo) => {
+    const item = document.createElement('li');
+    item.className = `todo-item${todo.completed ? ' completed' : ''}`;
+    item.dataset.id = String(todo.id);
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = todo.completed;
+    checkbox.setAttribute('aria-label', '標記為完成');
+
+    const text = document.createElement('span');
+    text.className = 'todo-text';
+    text.textContent = todo.text;
+
+    const deleteButton = document.createElement('button');
+    deleteButton.type = 'button';
+    deleteButton.className = 'delete-button';
+    deleteButton.setAttribute('aria-label', '刪除待辦');
+    deleteButton.textContent = '×';
+
+    item.append(checkbox, text, deleteButton);
+    todoList.append(item);
+  });
+
+  emptyState.hidden = visibleTodos.length > 0;
+  emptyState.textContent = getEmptyMessage();
 
   todoCount.textContent = `未完成: ${getUnfinishedCount()} 項`;
 }
@@ -129,6 +161,21 @@ todoList.addEventListener('click', (event) => {
 
   const item = event.target.closest('.todo-item');
   deleteTodo(Number(item.dataset.id));
+});
+
+// 處理篩選按鈕，並同步更新目前的選取狀態。
+filterButtons.forEach((button) => {
+  button.addEventListener('click', () => {
+    currentFilter = button.dataset.filter;
+
+    filterButtons.forEach((filterButton) => {
+      const isActive = filterButton === button;
+      filterButton.classList.toggle('active', isActive);
+      filterButton.setAttribute('aria-pressed', String(isActive));
+    });
+
+    renderTodos();
+  });
 });
 
 // 頁面載入時顯示已儲存的待辦資料。
