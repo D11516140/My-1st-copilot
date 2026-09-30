@@ -5,6 +5,7 @@ const todoInput = document.getElementById('todo-input');
 const todoList = document.getElementById('todo-list');
 const emptyState = document.getElementById('empty-state');
 const todoCount = document.getElementById('todo-count');
+const clearCompletedButton = document.getElementById('clear-completed-button');
 const filterButtons = document.querySelectorAll('.filter-button');
 let todos = loadTodos();
 let currentFilter = 'all';
@@ -40,6 +41,11 @@ function saveTodos() {
 // 計算目前尚未完成的待辦數量。
 function getUnfinishedCount() {
   return todos.filter((todo) => !todo.completed).length;
+}
+
+// 計算目前已完成的待辦數量。
+function getCompletedCount() {
+  return todos.filter((todo) => todo.completed).length;
 }
 
 // 依照目前的篩選條件取得要顯示的待辦事項。
@@ -102,6 +108,7 @@ function renderTodos() {
   emptyState.textContent = getEmptyMessage();
 
   todoCount.textContent = `未完成: ${getUnfinishedCount()} 項`;
+  clearCompletedButton.disabled = getCompletedCount() === 0;
 }
 
 // 新增待辦事項，空白內容直接忽略。
@@ -136,6 +143,17 @@ function toggleTodo(id, completed) {
   renderTodos();
 }
 
+// 顯示確認對話框後清除所有已完成的待辦事項。
+function clearCompletedTodos() {
+  if (getCompletedCount() === 0 || !window.confirm('確定要清除所有已完成的事項嗎？')) {
+    return;
+  }
+
+  todos = todos.filter((todo) => !todo.completed);
+  saveTodos();
+  renderTodos();
+}
+
 // 處理新增表單送出。
 todoForm.addEventListener('submit', (event) => {
   event.preventDefault();
@@ -162,6 +180,9 @@ todoList.addEventListener('click', (event) => {
   const item = event.target.closest('.todo-item');
   deleteTodo(Number(item.dataset.id));
 });
+
+// 處理清除已完成按鈕。
+clearCompletedButton.addEventListener('click', clearCompletedTodos);
 
 // 處理篩選按鈕，並同步更新目前的選取狀態。
 filterButtons.forEach((button) => {
